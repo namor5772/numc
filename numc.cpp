@@ -1,5 +1,5 @@
 // numc.cpp : This file contains the 'main' function. Program execution begins and ends there.
-// Release x64. It worlks on Win10 machines
+// Release x64. It works on Win10 machines
 
 #include <iostream>
 
