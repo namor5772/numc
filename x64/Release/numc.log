@@ -1,0 +1,6 @@
+﻿  numc.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 16 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  numc.vcxproj -> C:\Users\roman\source\repos\numc\x64\Release\numc.exe
