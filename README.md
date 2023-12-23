@@ -12,9 +12,3 @@ Eg. 666 can be generated using 100, 75, 25, 10, 7 and 5 as follows :
 ((((100-7)x(25+10))+75)/5) = 666
 
 It will find ALL unique solutions accounting for commutivity and associativity. If none exists it will tell you so!
-
-<<<<<<< HEAD
-#################### ---
-=======
-#################### ------
->>>>>>> ccc45248531bf435741246cb94769371d2e90556
