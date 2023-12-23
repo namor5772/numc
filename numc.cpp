@@ -96,7 +96,7 @@ int Op(int o, int x, int y) {
         else if ((x / y) * y != x) { // x / y must be an integer
             return ERINT;
         }
-        else { // integer devision possible
+        else { // integer division possible
             return x / y;
         }
     }
@@ -460,7 +460,7 @@ void CreateSortedExpressionString_Enhanced(char cb[12]) {
                 so[TMP] = o;
 
                 // pop the last two strings from the stack into local TMP char and int arrays and int variables
-                // also calculate auxillary stack values
+                // also calculate auxiliary stack values
                 t = 0; while (br[pi][t] != '\0') { sbr[TMP][1][t] = br[pi][t]; t++; }; sbr[TMP][1][t] = '\0';
                 ssi[TMP][1] = si[pi]; // y
                 sso[TMP][1] = o;
@@ -521,7 +521,7 @@ void CreateSortedExpressionString_Enhanced(char cb[12]) {
 bool GenerateNextPermutation() {
     bool NotFinishedP = true;
     int i, j, t, edge;
-    int r[6];
+    int r[6] = {0};
 
     // find smallest j in (k...n - 1) where a[edge] < a[j]
     edge = k - 1;
@@ -602,7 +602,7 @@ void CheckBlock1() {
 }
 
 void CheckBlock(int xn, int xk, int xm, int xq, int xcn, int xci, int xt) {
-    char cx[12];
+    char cx[12] = {'a'};
     int i, j, res, i1, ii, t, u;
     bool NotFinishedP, NotFinishedC;
     bool isSame;
@@ -612,7 +612,7 @@ void CheckBlock(int xn, int xk, int xm, int xq, int xcn, int xci, int xt) {
     n = xn; k = xk; m = xm; q = xq; cn = xcn, ci = xci;
     i1 = 0; ii = 0;
 
-    // initalize permutation array a[] in ascending order
+    // initialize permutation array a[] in ascending order
     for (i = 0; i < n; i++) a[i] = i;
 
     NotFinishedP = true;
@@ -699,7 +699,7 @@ int main(int argc, char* argv[])
     ag = atoi(argv[7]);
 
     // USING ANY 1, 2, 3, 4, 5 and 6 NUMBERS
-    CheckBlock1(); // trivial case of one number match - included for complataeness
+    CheckBlock1(); // trivial case of one number match - included for completeness
     CheckBlock(6, 2, 1, 4, 1, 4, 2);
     CheckBlock(6, 3, 2, 4, 2, 3, 3);
     CheckBlock(6, 4, 3, 4, 5, 2, 4);
