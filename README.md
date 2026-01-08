@@ -1,14 +1,44 @@
 # numc
-Numc
-This is a console C application written using MS Visual Studio Community 2019 originally.
-It has been loaded into GitHub as a test of Git so that I may learn what it is all about.
-I used the Visual Studio functionality to do this (given that GitHub is owned by Microsoft!)
 
-The application is meant to solve the Numbers part in the Numbers and Letters TV show.
-Given six integers, using the 4 basic operations + - x and /, and each number at most once generate a given integer
-Eg. 666 can be generated using 100, 75, 25, 10, 7 and 5 as follows :
-((100+75+10)x(25-7)/5) = 666
-((100+75+10)x(25-7)/5) = 666
-((((100-7)x(25+10))+75)/5) = 666
+## Numc
+Numc is a console C/C++ program that solves the Numbers round from the Numbers and Letters TV show. Given six integers and a target, it searches for expressions using each input at most once with `+`, `-`, `*`, and `/`. Division is integer-only (no remainder), and subtraction is only accepted when the result is non-negative. The program prints all unique solutions while accounting for commutativity and associativity, and it reports when none exist.
 
-It will find ALL unique solutions accounting for commutativity and associativity. If none exists it will tell you so!
+Example:
+
+```text
+x64/Release/numc.exe 100 75 25 10 7 5 666
+((100+75+10)*(25-7)/5) = 666
+((((100-7)*(25+10))+75)/5) = 666
+...
+```
+
+Inputs are positional: six numbers followed by the target (7 args total). There is no argument validation, so always provide all seven values.
+
+## Building and Running
+This repo is a Visual Studio solution created with Visual Studio Community 2019. Recommended environment is Windows with MSVC and the Windows SDK installed.
+
+Build in Visual Studio:
+- Open `numc.sln`
+- Build `Release|x64` (or `Debug|x64`)
+
+Build via MSBuild (Developer Command Prompt):
+
+```text
+msbuild numc.sln /p:Configuration=Release /p:Platform=x64
+```
+
+Run after building:
+
+```text
+x64/Release/numc.exe 100 75 25 10 7 5 666
+```
+
+## Structure and Logic
+Core implementation lives in `numc.cpp` with declarations in `numc.h`. The `numd.cpp` file is a near-duplicate variant. Visual Studio artifacts are in `numc.vcxproj` and `numc.vcxproj.filters`.
+
+The solver is a brute-force search across:
+- permutations of the six inputs (`GenerateNextPermutation`)
+- combinations of operators (`GenerateNextCombination`)
+- bracket patterns encoded in the `c[42][12]` table
+
+For each permutation/combination/bracketing triplet, `TryPermCombBracTriplet` evaluates the expression using a simple stack, applying `Op` for each operator with integer-only rules. When a result matches the target, `CreateSortedExpressionString_Enhanced` builds a canonicalized expression string (ordering operands for commutative operations) so equivalent expressions collapse into one. The `fs[]` arrays store unique solutions and counts, which are printed at the end of each block of tests in `CheckBlock`.
