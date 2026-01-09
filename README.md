@@ -15,7 +15,7 @@ x64/Release/numc.exe 100 75 25 10 7 5 666
 Inputs are positional: six numbers followed by the target (7 args total). There is no argument validation, so always provide all seven values.
 
 ## Building and Running
-This repo is a Visual Studio solution created with Visual Studio Community 2019. Recommended environment is Windows with MSVC and the Windows SDK installed.
+This repo is a Visual Studio solution created with Visual Studio Community 2026. Recommended environment is Windows with MSVC and the Windows SDK installed.
 
 Build in Visual Studio:
 - Open `numc.sln`
