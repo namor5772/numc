@@ -34,11 +34,15 @@ x64/Release/numc.exe 100 75 25 10 7 5 666
 ```
 
 ## Structure and Logic
-Core implementation lives in `numc.cpp` with declarations in `numc.h`. The `numd.cpp` file is a near-duplicate variant. Visual Studio artifacts are in `numc.vcxproj` and `numc.vcxproj.filters`.
+Core implementation lives in `numc.cpp`. `numc.h` is currently an empty placeholder. The `numd.cpp` file is a near-duplicate variant kept for alternate builds or experiments; check with `diff numc.cpp numd.cpp` before making parallel edits. Visual Studio artifacts are in `numc.vcxproj` and `numc.vcxproj.filters`.
 
-The solver is a brute-force search across:
-- permutations of the six inputs (`GenerateNextPermutation`)
-- combinations of operators (`GenerateNextCombination`)
-- bracket patterns encoded in the `c[42][12]` table
+`main` searches every subset size from 1 through 6 by calling `CheckBlock1()` for the trivial one-number case and `CheckBlock(6, k, ...)` for `k = 2..6`. Each block is a brute-force search across:
+- permutations of the inputs (`GenerateNextPermutation`)
+- combinations of operators (`GenerateNextCombination`) over the four primitives `+ - * /`
+- bracket patterns encoded in the `c[42][12]` table (the 42 distinct bracketings of 6 operands; smaller subsets index a subrange)
 
-For each permutation/combination/bracketing triplet, `TryPermCombBracTriplet` evaluates the expression using a simple stack, applying `Op` for each operator with integer-only rules. When a result matches the target, `CreateSortedExpressionString_Enhanced` builds a canonicalized expression string (ordering operands for commutative operations) so equivalent expressions collapse into one. The `fs[]` arrays store unique solutions and counts, which are printed at the end of each block of tests in `CheckBlock`.
+For each permutation/combination/bracketing triplet, `TryPermCombBracTriplet` evaluates the expression using a fixed-size stack, applying `Op` for each operator with integer-only rules (invalid results propagate as the sentinel `ERINT = -6666`). When a result matches the target, `CreateSortedExpressionString_Enhanced` builds a canonicalized expression string (ordering operands for commutative operations) so equivalent expressions collapse into one. The `fs[]` arrays store unique solutions and counts, which are printed at the end of each block of tests in `CheckBlock`.
+
+## Contributor Docs
+- `AGENTS.md` — repository guidelines (style, build, testing conventions).
+- `CLAUDE.md` — orientation for Claude Code sessions working in this repo.
