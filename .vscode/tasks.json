@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build debug (cl)",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "call \"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" >nul && if not exist x64\\Debug md x64\\Debug && cl /nologo /EHsc /W3 /Zi /Fe:x64\\Debug\\numc.exe /Fo:x64\\Debug\\ /Fd:x64\\Debug\\ numc.cpp /link /DEBUG"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$msCompile"],
+            "detail": "Compile numc.cpp with /Zi for debugging into x64\\Debug\\numc.exe"
+        },
+        {
+            "label": "build release (cl)",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "call \"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" >nul && if not exist x64\\Release md x64\\Release && cl /nologo /EHsc /W3 /O2 /Fe:x64\\Release\\numc.exe /Fo:x64\\Release\\ numc.cpp"
+            ],
+            "group": "build",
+            "problemMatcher": ["$msCompile"],
+            "detail": "Optimized build into x64\\Release\\numc.exe"
+        }
+    ]
+}

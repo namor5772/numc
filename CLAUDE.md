@@ -17,6 +17,12 @@ $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere
 & $msbuild numc.sln /p:Configuration=Release /p:Platform=x64
 ```
 
+VS Code: `.vscode/tasks.json` and `.vscode/launch.json` are provided. The tasks call `vcvars64.bat` internally, so VS Code does **not** need to be launched from a Developer Command Prompt. Requires the Microsoft *C/C++* extension and the "Desktop development with C++" workload in VS 2026.
+
+- **Ctrl+Shift+B** → default task `build debug (cl)` → `cl.exe` compiles `numc.cpp` → `x64/Debug/numc.exe` with `/Zi /DEBUG`; task `build release (cl)` → `/O2` build → `x64/Release/numc.exe`.
+- **F5** launches the debugger. Two configs: *"Debug numc (example args)"* uses the README inputs `100 75 25 10 7 5 666`; *"Debug numc (prompt for args)"* prompts at launch.
+- Both build tasks set `$msCompile` as the problem matcher. They hardcode `C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat` — update `.vscode/tasks.json` if the VS install moves.
+
 macOS/Linux: `make` (or `c++ -O2 -o numc numc.cpp`) produces `./numc` in the repo root (gitignored). The solver is deterministic integer math — output is identical across platforms, so the smoke test below applies everywhere.
 
 Run (exactly 7 positional args — six numbers then the target; there is **no argument validation**, fewer args crash):
