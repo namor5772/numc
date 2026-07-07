@@ -2,46 +2,66 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project
+## What this is
 
-`numc` is a single-binary C++ console solver for the "Numbers round" from the *Countdown / Numbers and Letters* TV show. It takes 6 integers plus a target (7 positional args, no validation) and prints all unique expressions built from `+ - * /` that evaluate to the target. Division is integer-only (rejects non-integer results); subtraction must produce a non-negative result.
+A single-file C++ console program that solves the Numbers round from the "Letters and Numbers" TV show: given six integers and a target, it brute-forces all expressions using `+ - * /` (each input used at most once) and prints every unique solution. Division must be exact (integer, no remainder) and subtraction must not go negative; invalid intermediate results are marked with the sentinel `ERINT = -6666`.
 
-Usage: `x64/Release/numc.exe 100 75 25 10 7 5 666`
+## Build and run
 
-## Build & Run
+Visual Studio: open `numc.sln`, build `Release|x64`.
 
-This is a Visual Studio 2026 solution (MSVC + Windows SDK). No test suite exists — validate changes by running the binary against known inputs.
+MSBuild is not on PATH in a plain shell. From PowerShell:
 
-- Visual Studio: open `numc.sln`, build `Release|x64` (or `Debug|x64`).
-- MSBuild (Developer Command Prompt):
-  `msbuild numc.sln /p:Configuration=Release /p:Platform=x64`
-- Quick sanity check after changes: run with a known target and confirm expected solutions still appear and invalid operations (divide by zero, non-integer division, negative subtraction) are still rejected.
+```powershell
+$msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+& $msbuild numc.sln /p:Configuration=Release /p:Platform=x64
+```
+
+Run (exactly 7 positional args — six numbers then the target; there is **no argument validation**, fewer args crash):
+
+```powershell
+.\x64\Release\numc.exe 100 75 25 10 7 5 666
+```
+
+`numc.py` (repo root) is a Tkinter GUI wrapper around the exe: `python numc.py`. It validates the seven inputs before shelling out to `x64/Release/numc.exe` on a background thread, so it needs the Release|x64 build to exist. Pure stdlib, no dependencies. `numc.ico` is its icon (also used by a desktop shortcut on the owner's machine).
+
+## Testing
+
+There is no test suite. Validate changes by building and running the known-good example above; it finishes in a few seconds and must end with:
+
+```
+1 259708 48 ((100+75+10)*(25-7)/5) = 666
+2 3456920 12 ((((100-7)*(25+10))+75)/5) = 666
+2 SOLUTIONS FOUND USING 6 NUMBERS, TESTED 30965760 CASES
+```
+
+(Blocks for 1–5 numbers print "NO SOLUTIONS" for this input.) If you touch core logic, also confirm divide-by-zero, non-integer division, and negative subtraction are still rejected.
 
 ## Architecture
 
-All logic lives in **`numc.cpp`** (~710 lines). `numc.h` is empty. `numd.cpp` is a near-duplicate variant kept for alternate builds/experiments — when modifying core logic, decide whether the change should be mirrored into `numd.cpp` (check with `diff numc.cpp numd.cpp`; the two files currently differ only in comments/typos and minor init).
+All code lives in `numc.cpp` (~630 lines). `numc.h` is **empty**, and `numd.cpp` is a stale near-duplicate (comment typos, missing zero-init) that is **not part of the build** — the .vcxproj compiles only `numc.cpp`. Make changes in `numc.cpp`.
 
-The solver is a brute-force search over three orthogonal dimensions, driven from `main` via `CheckBlock(...)` calls that enumerate subset sizes 1..6:
+The search enumerates permutations × operator-combinations × bracketings:
 
-1. **Permutations** of the input numbers — `GenerateNextPermutation` walks lexicographic permutations of array `a[]` / `av[]`.
-2. **Operator combinations** — `GenerateNextCombination` enumerates all 4^(n-1) operator tuples for the 4 primitive ops (codes 0..3 mapped by `OpMap`: `+ - * /`).
-3. **Bracketings** — hardcoded in the `c[42][12]` table as postfix-style strings (digits = operator slots, `a` = operand placeholder). The table encodes all 42 distinct bracketings of 6 operands; `CheckBlock` indexes subranges of it for smaller subset sizes.
-
-For each (permutation, operator-combo, bracketing) triple, `TryPermCombBracTriplet` evaluates the expression via a small fixed-size stack using `Op(o, x, y)` for integer arithmetic. Invalid results propagate as the sentinel `ERINT = -6666`. When the value equals target `ag`, `CreateSortedExpressionString_Enhanced` builds a **canonical** string representation: operands of commutative ops (`+`, `*`) are sorted so expressions equivalent under commutativity/associativity collapse to one string. Results are deduplicated via `strHash` + linear scan into the global `fs[5000][40]` array.
+- `main()` runs one block per expression size: `CheckBlock1()` (trivial 1-number match), then `CheckBlock(n,k,m,q,cn,ci,t)` for 2–6 numbers with hard-coded parameters per size (the 6-number block tests 30,965,760 cases).
+- `c[42][12]` is the table of all 42 bracketing shapes as postfix (RPN) template strings: `'a'` = push the next number of the current permutation, a digit = apply operator `b[digit - ci]`. `ci` trims the template for smaller expression sizes.
+- `GenerateNextPermutation()` / `GenerateNextCombination()` step the global `a[]` / `b[]` arrays; `TryPermCombBracTriplet()` evaluates the postfix string on an int stack (`si[]`), applying `Op()` which enforces the game rules.
+- On a target match, `CreateSortedExpressionString_Enhanced()` builds a *canonical* string so algebraically equivalent expressions collapse to one: it flattens chains of `+/-` and `*//` into term lists, sorts terms by signed value with a string hash (`strHash`) as tie-break, and re-parenthesizes. This canonicalization is the subtle part of the codebase — most dedup bugs live here.
+- Unique strings are stored in `fs[]` (hard cap 5000 solutions × 40 chars, no bounds checks) with hit counters, and printed at the end of each block as `<solution#> <case#> <hits> <expr> = <target>`.
 
 ### Global state
 
-The program relies heavily on fixed-size global arrays (no dynamic allocation by convention):
+Functions communicate through fixed-size globals, not parameters (no dynamic allocation anywhere — keep it that way per AGENTS.md):
 
-- `av[6]`, `ag` — inputs and target, set from `argv` in `main`.
-- `fs[]`, `fsn[]`, `fsi1[]`, `fsii[]`, `fsp` — deduplicated solution strings, counts, and running pointer.
-- `br[]`, `si[]`, `so[]`, `ssp[]` — primary expression-building stack.
-- `sbr[][]`, `ssi[][]`, `sso[][]`, `ssa[][]`, `ssb[][]`, `ssx[][]` — per-level internal stacks used during canonical string construction.
-- `c[42][12]` — the bracketing lookup table (treat as a fixed constant; the indexing in `CheckBlock(6, k, ..., cn, ci, xt)` assumes its exact layout).
+- `av[6]`, `ag` — input numbers and target, set from `argv` in `main`.
+- `a[]`, `b[]` — current permutation and operator combination; `n,k,m,q,cn,ci` — per-block enumeration sizing, set globally before the loops run.
+- `br[]`, `si[]`, `so[]`, `ssp[]` — expression-building stack (string, value, operator, internal pointer).
+- `sbr[][]`, `ssi[][]`, `sso[][]`, `ssa[][]`, `ssb[][]`, `ssx[][]` — parallel internal stacks used during canonical string construction; index `TMP = 6` is the scratch slot.
+- `fs[]`, `fsn[]`, `fsi1[]`, `fsii[]` — deduplicated solution strings with hit counts and discovery indices.
+- `c[42][12]` — the bracketing table; treat as a fixed constant, the `CheckBlock` parameters assume its exact layout.
 
-### Conventions
+## Repo quirks
 
-- 4-space indent, braces on same line as control statements.
-- PascalCase for functions (`TryPermCombBracTriplet`, `CheckBlock`), short lowercase names for locals/globals (`av`, `ag`, `si`), uppercase for constants (`ERINT`, `TMP`).
-- Keep arrays fixed-size. Avoid introducing dynamic allocation unless there's a concrete need.
-- No formatter/linter is configured.
+- Build outputs under `x64/Release/` (including `numc.exe`) are **tracked in git** even though `.gitignore` lists `x64/` — every rebuild dirties the working tree. The owner has historically committed rebuilt binaries (e.g. "Recomiled" commits), but don't sweep artifact churn into unrelated commits.
+- Style (per AGENTS.md): 4-space indent, braces on the same line, PascalCase functions (`TryPermCombBracTriplet`), short lowercase globals/locals (`av`, `ag`, `si`), uppercase constants (`ERINT`). No formatter or linter.
+- Commits are short capitalized summaries, sometimes with a device/date stamp.
