@@ -1,11 +1,12 @@
-"""Tkinter GUI wrapper around numc.exe — the Numbers round solver.
+"""Tkinter GUI wrapper around the numc solver.
 
 Enter the six numbers and the target, press [Calculate], and the solver's
 output appears in the text box below. The search itself runs in the compiled
-C++ executable (x64/Release/numc.exe), so build the Release|x64 configuration
-first (see README.md).
+C++ executable, so build it first (see README.md):
+  - Windows: Release|x64 in Visual Studio -> x64/Release/numc.exe
+  - macOS/Linux: make -> ./numc
 
-Run with:  python numc.py
+Run with:  python numc.py  (or python3 numc.py)
 """
 
 import queue
@@ -17,7 +18,20 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 
-EXE_PATH = Path(__file__).resolve().parent / "x64" / "Release" / "numc.exe"
+_REPO_DIR = Path(__file__).resolve().parent
+if sys.platform == "win32":
+    EXE_PATH = _REPO_DIR / "x64" / "Release" / "numc.exe"
+    BUILD_HINT = "Build the Release|x64 configuration first (see README.md)."
+    MONO_FONT = ("Consolas", 10)
+elif sys.platform == "darwin":
+    EXE_PATH = _REPO_DIR / "numc"
+    BUILD_HINT = "Build it first:  make  (or: c++ -O2 -o numc numc.cpp)"
+    MONO_FONT = ("Menlo", 11)
+else:
+    EXE_PATH = _REPO_DIR / "numc"
+    BUILD_HINT = "Build it first:  make  (or: c++ -O2 -o numc numc.cpp)"
+    MONO_FONT = ("DejaVu Sans Mono", 10)
+
 DEFAULT_NUMBERS = ("100", "75", "25", "10", "7", "5")
 DEFAULT_TARGET = "666"
 INT32_MIN, INT32_MAX = -2**31, 2**31 - 1
@@ -84,7 +98,7 @@ class NumcApp:
         outframe.columnconfigure(0, weight=1)
 
         self.output = tk.Text(outframe, width=90, height=24, wrap="none",
-                              font=("Consolas", 10), state="disabled")
+                              font=MONO_FONT, state="disabled")
         self.output.grid(row=0, column=0, sticky="nsew")
         yscroll = ttk.Scrollbar(outframe, orient="vertical", command=self.output.yview)
         yscroll.grid(row=0, column=1, sticky="ns")
@@ -139,8 +153,7 @@ class NumcApp:
             proc = subprocess.run([str(EXE_PATH), *args], capture_output=True,
                                   text=True, timeout=RUN_TIMEOUT_S, creationflags=flags)
         except FileNotFoundError:
-            self.result_queue.put(("error", f"{EXE_PATH} not found.\n\n"
-                                   "Build the Release|x64 configuration first (see README.md)."))
+            self.result_queue.put(("error", f"{EXE_PATH} not found.\n\n{BUILD_HINT}"))
         except subprocess.TimeoutExpired:
             self.result_queue.put(("error", f"numc.exe did not finish within {RUN_TIMEOUT_S} s."))
         except OSError as exc:

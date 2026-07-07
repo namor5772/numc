@@ -33,6 +33,18 @@ Run after building:
 x64/Release/numc.exe 100 75 25 10 7 5 666
 ```
 
+Build and run on macOS/Linux (the solver is portable C++; Apple clang or g++ both work):
+
+```text
+make
+./numc 100 75 25 10 7 5 666
+```
+
+The output is identical on all platforms — the search is deterministic integer arithmetic.
+
+## GUI
+`numc.py` is a Tkinter front end for the solver: enter the six numbers and the target, press [Calculate], and the results appear in a text box. Run it with `python numc.py` (Windows) or `python3 numc.py` (macOS/Linux) after building the solver for your platform. It uses only the Python standard library (Homebrew Python on macOS may need `brew install python-tk`).
+
 ## Structure and Logic
 Core implementation lives in `numc.cpp`. `numc.h` is currently an empty placeholder. The `numd.cpp` file is a near-duplicate variant kept for alternate builds or experiments; check with `diff numc.cpp numd.cpp` before making parallel edits. Visual Studio artifacts are in `numc.vcxproj` and `numc.vcxproj.filters`.
 

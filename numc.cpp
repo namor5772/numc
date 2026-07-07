@@ -1,6 +1,8 @@
 // numc.cpp : This file contains the 'main' function. Program execution begins and ends there.
-// Release x64. It works on Win10 machines...
+// Builds with MSVC (numc.sln, Release|x64) or any standard C++ compiler: c++ -O2 -o numc numc.cpp
 
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 
 
@@ -150,8 +152,7 @@ void CreateSortedExpressionString_Enhanced(char cb[12]) {
 
             // push string representation of number and the number itself onto expression calculation stacks
             v = av[a[j]];
-            sprintf_s(br[pi], "%d", v);
-//            sprintf(br[pi], "%d", v);
+            snprintf(br[pi], sizeof br[pi], "%d", v);
             si[pi] = v; // push onto si[]
             so[pi] = -1; // push onto so[]
             ssp[pi] = -1; // push onto ssp[]

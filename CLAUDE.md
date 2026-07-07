@@ -17,13 +17,15 @@ $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere
 & $msbuild numc.sln /p:Configuration=Release /p:Platform=x64
 ```
 
+macOS/Linux: `make` (or `c++ -O2 -o numc numc.cpp`) produces `./numc` in the repo root (gitignored). The solver is deterministic integer math — output is identical across platforms, so the smoke test below applies everywhere.
+
 Run (exactly 7 positional args — six numbers then the target; there is **no argument validation**, fewer args crash):
 
 ```powershell
 .\x64\Release\numc.exe 100 75 25 10 7 5 666
 ```
 
-`numc.py` (repo root) is a Tkinter GUI wrapper around the exe: `python numc.py`. It validates the seven inputs before shelling out to `x64/Release/numc.exe` on a background thread, so it needs the Release|x64 build to exist. Pure stdlib, no dependencies. `numc.ico` is its icon (also used by a desktop shortcut on the owner's machine).
+`numc.py` (repo root) is a Tkinter GUI wrapper: `python numc.py`. It validates the seven inputs before shelling out to the solver binary (`x64/Release/numc.exe` on Windows, `./numc` elsewhere) on a background thread, so build the solver first. Pure stdlib, no dependencies. `numc.ico` is its icon (also used by a desktop shortcut on the owner's Windows machine).
 
 ## Testing
 
@@ -65,3 +67,4 @@ Functions communicate through fixed-size globals, not parameters (no dynamic all
 - Build outputs under `x64/Release/` (including `numc.exe`) are **tracked in git** even though `.gitignore` lists `x64/` — every rebuild dirties the working tree. The owner has historically committed rebuilt binaries (e.g. "Recomiled" commits), but don't sweep artifact churn into unrelated commits.
 - Style (per AGENTS.md): 4-space indent, braces on the same line, PascalCase functions (`TryPermCombBracTriplet`), short lowercase globals/locals (`av`, `ag`, `si`), uppercase constants (`ERINT`). No formatter or linter.
 - Commits are short capitalized summaries, sometimes with a device/date stamp.
+- The owner's GitHub account blocks pushes that expose the private email (GH007). On a fresh clone, set `git config user.email "67407855+namor5772@users.noreply.github.com"` before committing.
